@@ -1,0 +1,90 @@
+.TH "Sistema de preços" 6
+batalhanaval
+.SH
+Descrição
+
+.PP
+Trabalho desenvolvido para a disciplina de redes do primeiro semestre de 2020.
+Esse trabalho consistem em um sistema de consultas de preços de combústivel em um servidor. Os clientes podem inserir e consultar dados nesse servidor, nas consultas o servidor responde com o menor preço encontrado, nas inserções o servidor insere no arquivo de preços os dados informados. Múltiplos clientes podem ser atendidos e todos os clientes podem consultar todos os dados.
+
+.SH 
+Compilação e execução
+.PP
+O programa é compilado pelo makefile usando o comando
+.SY make
+.YS
+.PP
+Para executar o programa é preciso executar primeiro o servidor e depois o cliente, já que o cliente nao conseguirá se conectar se o servidor nao estiver rodando.
+Utilizando o comando seguinte é possível executar o programa em apenas uma instância do shell. Executa o servidor em background e o cliente em seguida.
+.SY ./servidor
+.OP \-p porta
+.OP &
+.YS
+.SY ./cliente 
+.OP \-i ip 
+.OP \-p porta
+.YS
+
+.PP
+Uma outra forma de executar é usar um shell para o servidor e um shell para o cliente.
+.PP
+(shell 1)
+.SY ./servidor 
+.OP \-p porta
+.YS
+.PP
+(shell 2)
+.SY ./cliente 
+.OP \-i ip 
+.OP \-p porta
+.YS
+
+.PP
+Caso nenhum argumento seja passado aos programas, o servidor iniciará na porta padrão 8000, o cliente acessará a porta padrao 8000 com o ip padrao 127.0.0.1.
+
+.SH
+Código
+
+.PP
+O código é composto por 3 arquivos:
+.IP
+\(bu servidor.c
+.IP
+\(bu cliente.c
+.IP
+\(bu utils.h
+
+
+.SH
+Servidor.c
+.PP
+O arquivo servidor.c é responsável por inicializar o socket e ouvir a porta.
+Após inicializar o socket, o servidor fica em espera até algum cliente se conectar na porta.
+Feita a conexão, o servidor espera pela mensagem do cliente com as instruções de inserção ou pesquisa.
+O servidor executa em loop até que receba um sinal de término (SIGTERM;SIGKILL).
+Recebida a mensagem do cliente, a informação é decodificada e, se for uma mensagem de dados, insere os dados no arquivo. Se for uma mensagem de pesquisa, pesquisa no arquivo de acordo com as informações da mensagem e retorna o menor preço ou uma mensagem "Nenhum preço encontrado para esse combustível nesse raio." caso não exista nenhum preço de acordo com as informações fornecidas pelo cliente.
+
+.SS
+Recebendo uma mensagem do cliente
+.PP
+As mensagens do cliente são da forma "X id V lat long", onde X é D ou P, indicando se é uma mensagem de [D]ados ou [P]esquisa, id é um identificador da mensagem, V é um inteiro indicando o raio nas mensagens de pesquisa e o preço nas mensagens de dados, e lat e long são a latitude e longitude, respectivamente.
+
+.SH
+Cliente.c
+.PP
+O arquivo cliente.c é responsavel por se conectar a porta e enviar as mensagens do usuário.
+Após inicializar o socket, o cliente conecta na porta e espera pela entrada do usuário com as informações de sua mensagem.
+Após o usuário entrar com as informações, o cliente envia a mensagem para o servidor, espera uma confirmação, se não foi confirmada, envia mais uma vez a mensagem.
+Depois disso o cliente espera pela mensagem do servidor com a resposta de sua mensagem.
+
+.SS
+Recebendo uma mensagem do servidor.
+.PP
+Caso o cliente tenha enviado uma mensagem de dados, o servidor responderá com uma confirmação de que os dados foram inseridos. Caso a mensagem seja de pesquisa, o servidor responderá com o menor preço, o cliente então printa na saída padrão a mensagem de resposta do servidor.
+
+.SH
+Utils.h
+.PP
+Esse arquivo contém funções de IO e utéis para todos os arquivos em geral.
+É responsável por fazer a inserção da mensagem do cliente no arquivo e fazer a busca de preços nesse mesmo arquivo.
+Também existem funções de leitura de dados do teclado e tipificação dos dados lidos.
